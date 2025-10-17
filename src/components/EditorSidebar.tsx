@@ -14,11 +14,12 @@ import {
   AlignCenter,
   AlignRight,
   Plus,
-  X
+  X,
+  GripVertical
 } from 'lucide-react';
-import { FormattingSettings, ColorPalette, Resume } from '../types/resume';
+import { FormattingSettings, Resume } from '../types/resume';
 import { TEMPLATES, COLOR_PALETTES, FONT_STYLES } from '../constants/templates';
-import { AVAILABLE_SECTIONS, SECTION_TEMPLATES } from '../constants/sections';
+import { AVAILABLE_SECTIONS } from '../constants/sections';
 
 interface EditorSidebarProps {
   activeTab: 'design' | 'formatting' | 'sections' | 'ai';
@@ -30,6 +31,7 @@ interface EditorSidebarProps {
   activeSections: string[];
   onAddSection: (section: string) => void;
   onDeleteSection: (section: string) => void;
+  onReorderSections: (newOrder: string[]) => void;
   onApplyFormat: (command: string, value?: string) => void;
   onApplyTextColor: (color: string) => void;
   activeResume: Resume | null;
@@ -49,6 +51,7 @@ export function EditorSidebar({
   activeSections,
   onAddSection,
   onDeleteSection,
+  onReorderSections,
   onApplyFormat,
   onApplyTextColor,
   activeResume,
@@ -58,6 +61,8 @@ export function EditorSidebar({
   onGapJustification
 }: EditorSidebarProps) {
   const [templateCategory, setTemplateCategory] = useState<'all' | 'classic' | 'modern' | 'photo'>('all');
+  const [draggedSection, setDraggedSection] = useState<string | null>(null);
+  const [dragOverSection, setDragOverSection] = useState<string | null>(null);
 
   const filteredTemplates = templateCategory === 'all'
     ? TEMPLATES
@@ -315,32 +320,86 @@ export function EditorSidebar({
         {activeTab === 'sections' && (
           <div className="space-y-4">
             <h4 className="text-sm font-semibold text-slate-800 mb-3">Resume Sections</h4>
-            <div className="space-y-2">
-              {AVAILABLE_SECTIONS.map(section => {
-                const isActive = activeSections.includes(section);
+            <div className="space-y-2 mb-6">
+              {activeSections.map((section) => {
+                const isDragging = draggedSection === section;
+                const isOver = dragOverSection === section;
                 return (
-                  <div
-                    key={section}
-                    className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
-                      isActive
-                        ? 'border-green-500 bg-green-50'
-                        : 'border-gray-300 bg-gray-50'
-                    }`}
-                  >
-                    <span className={`text-sm ${isActive ? 'text-green-700' : 'text-slate-700'}`}>
-                      {section}
-                    </span>
-                    <button
-                      onClick={() => (isActive ? onDeleteSection(section) : onAddSection(section))}
-                      className={`${
-                        isActive ? 'text-red-500 hover:text-red-600' : 'text-blue-500 hover:text-blue-600'
-                      } transition-colors`}
+                  <div key={section}>
+                    {isOver && draggedSection && draggedSection !== section && (
+                      <div className="h-12 bg-blue-100 border-2 border-dashed border-blue-400 rounded-lg mb-2 flex items-center justify-center text-xs text-blue-600 font-medium">
+                        Drop here
+                      </div>
+                    )}
+                    <div
+                      draggable
+                      onDragStart={(e) => {
+                        setDraggedSection(section);
+                        e.dataTransfer.effectAllowed = 'move';
+                      }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        if (draggedSection && draggedSection !== section) {
+                          setDragOverSection(section);
+                        }
+                      }}
+                      onDragLeave={() => {
+                        setDragOverSection(null);
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (draggedSection && draggedSection !== section) {
+                          const draggedIndex = activeSections.indexOf(draggedSection);
+                          const targetIndex = activeSections.indexOf(section);
+                          const newSections = [...activeSections];
+                          newSections.splice(draggedIndex, 1);
+                          newSections.splice(targetIndex, 0, draggedSection);
+                          onReorderSections(newSections);
+                        }
+                        setDraggedSection(null);
+                        setDragOverSection(null);
+                      }}
+                      onDragEnd={() => {
+                        setDraggedSection(null);
+                        setDragOverSection(null);
+                      }}
+                      className={`flex items-center gap-2 p-3 rounded-lg border transition-all cursor-move ${
+                        isDragging
+                          ? 'opacity-40 scale-95 border-blue-400 bg-blue-50'
+                          : 'border-green-500 bg-green-50'
+                      }`}
                     >
-                      {isActive ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-                    </button>
+                      <GripVertical className="w-4 h-4 text-green-600 flex-shrink-0" />
+                      <span className="text-sm text-green-700 flex-1">{section}</span>
+                      <button
+                        onClick={() => onDeleteSection(section)}
+                        className="text-red-500 hover:text-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
+            </div>
+            <div className="border-t border-gray-300 pt-4">
+              <h4 className="text-sm font-semibold text-slate-800 mb-3">Add Section</h4>
+              <div className="space-y-2">
+                {AVAILABLE_SECTIONS.filter(section => !activeSections.includes(section)).map(section => (
+                  <div
+                    key={section}
+                    className="flex items-center justify-between p-3 rounded-lg border transition-colors border-gray-300 bg-gray-50 hover:bg-gray-100"
+                  >
+                    <span className="text-sm text-slate-700">{section}</span>
+                    <button
+                      onClick={() => onAddSection(section)}
+                      className="text-blue-500 hover:text-blue-600 transition-colors"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

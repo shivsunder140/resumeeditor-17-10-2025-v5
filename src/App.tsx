@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { Save, Download, RotateCcw, FileText, Upload, X } from 'lucide-react';
 import { supabase } from './lib/supabase';
 import { Resume, FormattingSettings } from './types/resume';
@@ -83,8 +83,8 @@ function App() {
         }
       } else {
         const localResume: Resume = {
-          id: 'local-' + Date.now(),
-          ...newResume as Resume
+          ...newResume as Resume,
+          id: 'local-' + Date.now()
         };
         setActiveResume(localResume);
         setEditorContent(localResume.content);
@@ -96,8 +96,8 @@ function App() {
     } catch (error) {
       console.error('Error creating resume:', error);
       const localResume: Resume = {
-        id: 'local-' + Date.now(),
-        ...newResume as Resume
+        ...newResume as Resume,
+        id: 'local-' + Date.now()
       };
       setActiveResume(localResume);
       setEditorContent(localResume.content);
@@ -177,8 +177,8 @@ function App() {
           }
         } else {
           const localResume: Resume = {
-            id: 'local-' + Date.now(),
-            ...newResume as Resume
+            ...newResume as Resume,
+            id: 'local-' + Date.now()
           };
           setActiveResume(localResume);
           setEditorContent(localResume.content);
@@ -188,8 +188,8 @@ function App() {
       } catch (error) {
         console.error('Error saving to Supabase:', error);
         const localResume: Resume = {
-          id: 'local-' + Date.now(),
-          ...newResume as Resume
+          ...newResume as Resume,
+          id: 'local-' + Date.now()
         };
         setActiveResume(localResume);
         setEditorContent(localResume.content);
@@ -289,6 +289,32 @@ function App() {
       sectionToRemove.remove();
       handleContentChange(tempContainer.innerHTML);
     }
+  };
+
+  const handleReorderSections = (newOrder: string[]) => {
+    setActiveSections(newOrder);
+
+    const tempContainer = document.createElement('div');
+    tempContainer.innerHTML = editorContent;
+
+    const sectionElements = new Map<string, Element>();
+    tempContainer.querySelectorAll('.resume-section').forEach((element) => {
+      const sectionName = element.getAttribute('data-section-name');
+      if (sectionName) {
+        sectionElements.set(sectionName, element);
+      }
+    });
+
+    tempContainer.innerHTML = '';
+
+    newOrder.forEach((sectionName) => {
+      const element = sectionElements.get(sectionName);
+      if (element) {
+        tempContainer.appendChild(element.cloneNode(true));
+      }
+    });
+
+    handleContentChange(tempContainer.innerHTML);
   };
 
   const applyFormat = (command: string, value?: string) => {
@@ -455,6 +481,7 @@ function App() {
         activeSections={activeSections}
         onAddSection={handleAddSection}
         onDeleteSection={handleDeleteSection}
+        onReorderSections={handleReorderSections}
         onApplyFormat={applyFormat}
         onApplyTextColor={applyTextColor}
         activeResume={activeResume}
@@ -512,6 +539,7 @@ function App() {
             formatting={formattingSettings}
             onContentChange={handleContentChange}
             editorRef={editorRef}
+            onReorderSections={handleReorderSections}
           />
         </div>
       </div>

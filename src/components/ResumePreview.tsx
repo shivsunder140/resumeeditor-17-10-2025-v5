@@ -6,13 +6,15 @@ interface ResumePreviewProps {
   formatting: FormattingSettings;
   onContentChange: (content: string) => void;
   editorRef: React.RefObject<HTMLDivElement>;
+  onReorderSections: (newOrder: string[]) => void;
 }
 
 export function ResumePreview({
   content,
   formatting,
   onContentChange,
-  editorRef
+  editorRef,
+  onReorderSections
 }: ResumePreviewProps) {
   const [isDndActive, setIsDndActive] = useState(false);
   const dndActivationRef = useRef({ count: 0, timestamp: 0 });
@@ -108,6 +110,15 @@ export function ResumePreview({
       if (draggedElement && placeholder) {
         placeholder.parentNode?.insertBefore(draggedElement, placeholder);
         onContentChange(editorNode.innerHTML);
+
+        const newOrder: string[] = [];
+        editorNode.querySelectorAll('.resume-section').forEach((section) => {
+          const sectionName = section.getAttribute('data-section-name');
+          if (sectionName) {
+            newOrder.push(sectionName);
+          }
+        });
+        onReorderSections(newOrder);
       }
       placeholder?.remove();
       draggedElement?.classList.remove('dragging');
