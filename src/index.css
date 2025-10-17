@@ -48,19 +48,19 @@
     border: none;
   }
 
-  .resume-content-view.dnd-active .resume-section {
-    cursor: move;
+  .resume-content-view .resume-section {
+    cursor: grab;
+    transition: all 0.2s ease-in-out;
+    position: relative;
+  }
+
+  .resume-content-view .resume-section:hover {
     outline: 2px dashed #60a5fa;
-    outline-offset: 4px;
-    transition: outline 0.2s ease-in-out;
+    outline-offset: 2px;
   }
 
   .resume-content-view .resume-section.dragging {
-    opacity: 0.4;
-    transform: scale(0.98);
-  }
-
-  .resume-content-view.dragging-active {
+    opacity: 0.5;
     cursor: grabbing;
   }
 

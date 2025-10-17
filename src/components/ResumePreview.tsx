@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { FormattingSettings } from '../types/resume';
 
 interface ResumePreviewProps {
@@ -16,8 +16,6 @@ export function ResumePreview({
   editorRef,
   onReorderSections
 }: ResumePreviewProps) {
-  const [isDndActive, setIsDndActive] = useState(false);
-  const dndActivationRef = useRef({ count: 0, timestamp: 0 });
 
   const pageStyle: React.CSSProperties = {
     fontFamily: formatting.fontStyle,
@@ -27,12 +25,6 @@ export function ResumePreview({
     color: formatting.textColor,
   };
 
-  useEffect(() => {
-    const editorNode = editorRef.current;
-    if (editorNode) {
-      editorNode.classList.toggle('dnd-active', isDndActive);
-    }
-  }, [isDndActive, editorRef]);
 
   useEffect(() => {
     const editorNode = editorRef.current;
@@ -40,48 +32,22 @@ export function ResumePreview({
 
     let draggedElement: HTMLElement | null = null;
 
-    const handleContextMenu = (e: MouseEvent) => {
-      e.preventDefault();
-      const now = Date.now();
-      if (now - dndActivationRef.current.timestamp > 500) {
-        dndActivationRef.current.count = 1;
-      } else {
-        dndActivationRef.current.count++;
-      }
-      dndActivationRef.current.timestamp = now;
-      if (dndActivationRef.current.count === 2) {
-        setIsDndActive(true);
-        dndActivationRef.current.count = 0;
-      }
-    };
-
-    const handleDeactivationClick = (e: MouseEvent) => {
-      if (isDndActive && e.button !== 2 && !editorNode.classList.contains('dragging-active')) {
-        setIsDndActive(false);
-      }
-    };
-
     const handleDragStart = (e: DragEvent) => {
-      if (!isDndActive) {
-        e.preventDefault();
-        return;
-      }
-      draggedElement = (e.target as HTMLElement).closest('.resume-section');
+      const target = e.target as HTMLElement;
+      draggedElement = target.closest('.resume-section');
+
       if (draggedElement) {
-        editorNode.classList.add('dragging-active');
-        setTimeout(() => draggedElement?.classList.add('dragging'), 0);
+        draggedElement.classList.add('dragging');
         if (e.dataTransfer) {
           e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', 'dragging');
+          e.dataTransfer.setData('text/html', draggedElement.innerHTML);
         }
-      } else {
-        e.preventDefault();
       }
     };
 
     const handleDragOver = (e: DragEvent) => {
       e.preventDefault();
-      if (!isDndActive) return;
+      if (!draggedElement) return;
 
       const target = (e.target as HTMLElement).closest('.resume-section') as HTMLElement;
       if (!target || target === draggedElement) return;
@@ -122,37 +88,30 @@ export function ResumePreview({
       }
       placeholder?.remove();
       draggedElement?.classList.remove('dragging');
-      editorNode.classList.remove('dragging-active');
       draggedElement = null;
-      setIsDndActive(false);
     };
 
     const handleDragEnd = () => {
       draggedElement?.classList.remove('dragging');
       editorNode.querySelectorAll('.drag-over-indicator').forEach(el => el.remove());
-      editorNode.classList.remove('dragging-active');
       draggedElement = null;
     };
 
     const sections = editorNode.querySelectorAll('.resume-section');
     sections.forEach(section => section.setAttribute('draggable', 'true'));
 
-    editorNode.addEventListener('contextmenu', handleContextMenu);
-    editorNode.addEventListener('click', handleDeactivationClick);
     editorNode.addEventListener('dragstart', handleDragStart);
     editorNode.addEventListener('dragover', handleDragOver);
     editorNode.addEventListener('drop', handleDrop);
     editorNode.addEventListener('dragend', handleDragEnd);
 
     return () => {
-      editorNode.removeEventListener('contextmenu', handleContextMenu);
-      editorNode.removeEventListener('click', handleDeactivationClick);
       editorNode.removeEventListener('dragstart', handleDragStart);
       editorNode.removeEventListener('dragover', handleDragOver);
       editorNode.removeEventListener('drop', handleDrop);
       editorNode.removeEventListener('dragend', handleDragEnd);
     };
-  }, [content, onContentChange, editorRef, isDndActive]);
+  }, [content, onContentChange, editorRef, onReorderSections]);
 
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== content) {

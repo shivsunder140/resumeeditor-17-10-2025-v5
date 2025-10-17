@@ -372,7 +372,11 @@ export function EditorSidebar({
                       <GripVertical className="w-4 h-4 text-green-600 flex-shrink-0" />
                       <span className="text-sm text-green-700 flex-1">{section}</span>
                       <button
-                        onClick={() => onDeleteSection(section)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteSection(section);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
                         className="text-red-500 hover:text-red-600 transition-colors"
                       >
                         <X className="w-4 h-4" />
