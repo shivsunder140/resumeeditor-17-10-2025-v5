@@ -6,7 +6,7 @@ interface ResumePreviewProps {
   formatting: FormattingSettings;
   onContentChange: (content: string) => void;
   editorRef: React.RefObject<HTMLDivElement>;
-  onReorderSections: (newOrder: string[]) => void;
+  onReorderSections: (newOrder: Array<{ id: string; name: string }>) => void;
 }
 
 export function ResumePreview({
@@ -77,11 +77,12 @@ export function ResumePreview({
         placeholder.parentNode?.insertBefore(draggedElement, placeholder);
         onContentChange(editorNode.innerHTML);
 
-        const newOrder: string[] = [];
+        const newOrder: Array<{ id: string; name: string }> = [];
         editorNode.querySelectorAll('.resume-section').forEach((section) => {
+          const sectionId = section.getAttribute('data-section-id');
           const sectionName = section.getAttribute('data-section-name');
-          if (sectionName) {
-            newOrder.push(sectionName);
+          if (sectionId && sectionName) {
+            newOrder.push({ id: sectionId, name: sectionName });
           }
         });
         onReorderSections(newOrder);

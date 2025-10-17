@@ -8,7 +8,7 @@ export interface Resume {
   template_id: string;
   colors: ColorPalette;
   formatting: FormattingSettings;
-  active_sections: string[];
+  active_sections: Array<{ id: string; name: string }>;
   created_at: string;
   updated_at: string;
 }

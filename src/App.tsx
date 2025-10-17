@@ -29,12 +29,12 @@ function App() {
     sideMargins: 20,
     paragraphIndent: 0
   });
-  const [activeSections, setActiveSections] = useState<string[]>([
-    'Heading',
-    'Profile',
-    'Core Skills',
-    'Experience',
-    'Education'
+  const [activeSections, setActiveSections] = useState<Array<{ id: string; name: string }>>([
+    { id: 'heading-1', name: 'Heading' },
+    { id: 'profile-1', name: 'Profile' },
+    { id: 'core-skills-1', name: 'Core Skills' },
+    { id: 'experience-1', name: 'Experience' },
+    { id: 'education-1', name: 'Education' }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [aiProcessing, setAiProcessing] = useState(false);
@@ -48,7 +48,10 @@ function App() {
 
   const handleStartFromScratch = async () => {
     const initialContent = activeSections
-      .map(sectionName => SECTION_TEMPLATES[sectionName] || '')
+      .map(section => {
+        const template = SECTION_TEMPLATES[section.name] || '';
+        return template.replace('data-section-name="', `data-section-id="${section.id}" data-section-name="`);
+      })
       .join('');
 
     const newResume: Partial<Resume> = {
@@ -265,24 +268,26 @@ function App() {
   };
 
   const handleAddSection = (sectionName: string) => {
-    if (!activeSections.includes(sectionName)) {
-      setActiveSections([...activeSections, sectionName]);
-      const sectionContent = SECTION_TEMPLATES[sectionName];
-      if (sectionContent) {
-        const newContent = editorContent + sectionContent;
-        handleContentChange(newContent);
-      }
+    const sectionId = `${sectionName.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+    const newSection = { id: sectionId, name: sectionName };
+    setActiveSections([...activeSections, newSection]);
+
+    const sectionContent = SECTION_TEMPLATES[sectionName];
+    if (sectionContent) {
+      const contentWithId = sectionContent.replace('data-section-name="', `data-section-id="${sectionId}" data-section-name="`);
+      const newContent = editorContent + contentWithId;
+      handleContentChange(newContent);
     }
   };
 
-  const handleDeleteSection = (sectionName: string) => {
-    setActiveSections(activeSections.filter(section => section !== sectionName));
+  const handleDeleteSection = (sectionId: string) => {
+    setActiveSections(activeSections.filter(section => section.id !== sectionId));
 
     const tempContainer = document.createElement('div');
     tempContainer.innerHTML = editorContent;
 
     const sectionToRemove = tempContainer.querySelector(
-      `.resume-section[data-section-name="${sectionName}"]`
+      `.resume-section[data-section-id="${sectionId}"]`
     );
 
     if (sectionToRemove) {
@@ -291,7 +296,7 @@ function App() {
     }
   };
 
-  const handleReorderSections = (newOrder: string[]) => {
+  const handleReorderSections = (newOrder: Array<{ id: string; name: string }>) => {
     setActiveSections(newOrder);
 
     const tempContainer = document.createElement('div');
@@ -299,16 +304,16 @@ function App() {
 
     const sectionElements = new Map<string, Element>();
     tempContainer.querySelectorAll('.resume-section').forEach((element) => {
-      const sectionName = element.getAttribute('data-section-name');
-      if (sectionName) {
-        sectionElements.set(sectionName, element);
+      const sectionId = element.getAttribute('data-section-id');
+      if (sectionId) {
+        sectionElements.set(sectionId, element);
       }
     });
 
     tempContainer.innerHTML = '';
 
-    newOrder.forEach((sectionName) => {
-      const element = sectionElements.get(sectionName);
+    newOrder.forEach((section) => {
+      const element = sectionElements.get(section.id);
       if (element) {
         tempContainer.appendChild(element.cloneNode(true));
       }
@@ -481,6 +486,28 @@ function App() {
         activeSections={activeSections}
         onAddSection={handleAddSection}
         onDeleteSection={handleDeleteSection}
+        onDuplicateSection={(sectionId: string) => {
+          const section = activeSections.find(s => s.id === sectionId);
+          if (section) {
+            const newSectionId = `${section.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+            const newSection = { id: newSectionId, name: section.name };
+            const sectionIndex = activeSections.findIndex(s => s.id === sectionId);
+            const newSections = [...activeSections];
+            newSections.splice(sectionIndex + 1, 0, newSection);
+            setActiveSections(newSections);
+
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = editorContent;
+            const sectionElement = tempContainer.querySelector(`.resume-section[data-section-id="${sectionId}"]`);
+
+            if (sectionElement) {
+              const clonedElement = sectionElement.cloneNode(true) as HTMLElement;
+              clonedElement.setAttribute('data-section-id', newSectionId);
+              sectionElement.parentNode?.insertBefore(clonedElement, sectionElement.nextSibling);
+              handleContentChange(tempContainer.innerHTML);
+            }
+          }
+        }}
         onReorderSections={handleReorderSections}
         onApplyFormat={applyFormat}
         onApplyTextColor={applyTextColor}

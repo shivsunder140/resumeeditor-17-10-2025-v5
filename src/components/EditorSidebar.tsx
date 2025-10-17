@@ -15,7 +15,8 @@ import {
   AlignRight,
   Plus,
   X,
-  GripVertical
+  GripVertical,
+  Copy
 } from 'lucide-react';
 import { FormattingSettings, Resume } from '../types/resume';
 import { TEMPLATES, COLOR_PALETTES, FONT_STYLES } from '../constants/templates';
@@ -28,10 +29,11 @@ interface EditorSidebarProps {
   onFormattingChange: (key: keyof FormattingSettings, value: any) => void;
   selectedTemplateId: string;
   onTemplateChange: (templateId: string) => void;
-  activeSections: string[];
+  activeSections: Array<{ id: string; name: string }>;
   onAddSection: (section: string) => void;
-  onDeleteSection: (section: string) => void;
-  onReorderSections: (newOrder: string[]) => void;
+  onDeleteSection: (sectionId: string) => void;
+  onDuplicateSection: (sectionId: string) => void;
+  onReorderSections: (newOrder: Array<{ id: string; name: string }>) => void;
   onApplyFormat: (command: string, value?: string) => void;
   onApplyTextColor: (color: string) => void;
   activeResume: Resume | null;
@@ -51,6 +53,7 @@ export function EditorSidebar({
   activeSections,
   onAddSection,
   onDeleteSection,
+  onDuplicateSection,
   onReorderSections,
   onApplyFormat,
   onApplyTextColor,
@@ -61,8 +64,8 @@ export function EditorSidebar({
   onGapJustification
 }: EditorSidebarProps) {
   const [templateCategory, setTemplateCategory] = useState<'all' | 'classic' | 'modern' | 'photo'>('all');
-  const [draggedSection, setDraggedSection] = useState<string | null>(null);
-  const [dragOverSection, setDragOverSection] = useState<string | null>(null);
+  const [draggedSection, setDraggedSection] = useState<{ id: string; name: string } | null>(null);
+  const [dragOverSection, setDragOverSection] = useState<{ id: string; name: string } | null>(null);
 
   const filteredTemplates = templateCategory === 'all'
     ? TEMPLATES
@@ -322,11 +325,11 @@ export function EditorSidebar({
             <h4 className="text-sm font-semibold text-slate-800 mb-3">Resume Sections</h4>
             <div className="space-y-2 mb-6">
               {activeSections.map((section) => {
-                const isDragging = draggedSection === section;
-                const isOver = dragOverSection === section;
+                const isDragging = draggedSection?.id === section.id;
+                const isOver = dragOverSection?.id === section.id;
                 return (
-                  <div key={section}>
-                    {isOver && draggedSection && draggedSection !== section && (
+                  <div key={section.id}>
+                    {isOver && draggedSection && draggedSection.id !== section.id && (
                       <div className="h-12 bg-blue-100 border-2 border-dashed border-blue-400 rounded-lg mb-2 flex items-center justify-center text-xs text-blue-600 font-medium">
                         Drop here
                       </div>
@@ -339,7 +342,7 @@ export function EditorSidebar({
                       }}
                       onDragOver={(e) => {
                         e.preventDefault();
-                        if (draggedSection && draggedSection !== section) {
+                        if (draggedSection && draggedSection.id !== section.id) {
                           setDragOverSection(section);
                         }
                       }}
@@ -348,9 +351,9 @@ export function EditorSidebar({
                       }}
                       onDrop={(e) => {
                         e.preventDefault();
-                        if (draggedSection && draggedSection !== section) {
-                          const draggedIndex = activeSections.indexOf(draggedSection);
-                          const targetIndex = activeSections.indexOf(section);
+                        if (draggedSection && draggedSection.id !== section.id) {
+                          const draggedIndex = activeSections.findIndex(s => s.id === draggedSection.id);
+                          const targetIndex = activeSections.findIndex(s => s.id === section.id);
                           const newSections = [...activeSections];
                           newSections.splice(draggedIndex, 1);
                           newSections.splice(targetIndex, 0, draggedSection);
@@ -370,14 +373,26 @@ export function EditorSidebar({
                       }`}
                     >
                       <GripVertical className="w-4 h-4 text-green-600 flex-shrink-0" />
-                      <span className="text-sm text-green-700 flex-1">{section}</span>
+                      <span className="text-sm text-green-700 flex-1">{section.name}</span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDeleteSection(section);
+                          onDuplicateSection(section.id);
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        className="text-blue-500 hover:text-blue-600 transition-colors"
+                        title="Duplicate section"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteSection(section.id);
                         }}
                         onMouseDown={(e) => e.stopPropagation()}
                         className="text-red-500 hover:text-red-600 transition-colors"
+                        title="Delete section"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -389,7 +404,7 @@ export function EditorSidebar({
             <div className="border-t border-gray-300 pt-4">
               <h4 className="text-sm font-semibold text-slate-800 mb-3">Add Section</h4>
               <div className="space-y-2">
-                {AVAILABLE_SECTIONS.filter(section => !activeSections.includes(section)).map(section => (
+                {AVAILABLE_SECTIONS.map(section => (
                   <div
                     key={section}
                     className="flex items-center justify-between p-3 rounded-lg border transition-colors border-gray-300 bg-gray-50 hover:bg-gray-100"
@@ -398,6 +413,7 @@ export function EditorSidebar({
                     <button
                       onClick={() => onAddSection(section)}
                       className="text-blue-500 hover:text-blue-600 transition-colors"
+                      title="Add section"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
