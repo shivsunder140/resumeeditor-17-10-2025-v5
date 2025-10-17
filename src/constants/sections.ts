@@ -1,0 +1,35 @@
+export const SECTION_TEMPLATES: Record<string, string> = {
+  'Heading': `<div class="resume-section" data-section-name="Heading"><p><b>[YOUR NAME]</b></p><p>[Your Title/Position]</p><p>[Your Email] | [Your Phone] | [Your LinkedIn]</p></div>`,
+  'Profile': `<div class="resume-section" data-section-name="Profile"><p><br></p><p><b>PROFESSIONAL SUMMARY</b></p><p>[Write a compelling summary of your professional background and key achievements]</p></div>`,
+  'Core Skills': `<div class="resume-section" data-section-name="Core Skills"><p><br></p><p><b>CORE SKILLS</b></p><p>• [Skill 1]</p><p>• [Skill 2]</p><p>• [Skill 3]</p></div>`,
+  'Experience': `<div class="resume-section" data-section-name="Experience"><p><br></p><p><b>EXPERIENCE</b></p><p>[Job Title] | [Company Name] | [Start Date - End Date]</p><p>• [Achievement or responsibility]</p><p>• [Achievement or responsibility]</p><p>• [Achievement or responsibility]</p></div>`,
+  'Education': `<div class="resume-section" data-section-name="Education"><p><br></p><p><b>EDUCATION</b></p><p>[Degree] in [Field of Study]</p><p>[University Name] | [Graduation Year]</p></div>`,
+  'Projects': `<div class="resume-section" data-section-name="Projects"><p><br></p><p><b>PROJECTS</b></p><p>[Project Name] | [Link to Project]</p><p>• [Description of the project and your role]</p></div>`,
+  'Certifications': `<div class="resume-section" data-section-name="Certifications"><p><br></p><p><b>CERTIFICATIONS</b></p><p>• [Certification Name] - [Issuing Organization] ([Year])</p></div>`,
+  'Languages': `<div class="resume-section" data-section-name="Languages"><p><br></p><p><b>LANGUAGES</b></p><p>• [Language] (Native/Fluent/Professional/Basic)</p></div>`,
+  'Volunteering': `<div class="resume-section" data-section-name="Volunteering"><p><br></p><p><b>VOLUNTEER EXPERIENCE</b></p><p>[Role] | [Organization] | [Dates]</p><p>• [Description of your contributions and impact.]</p></div>`,
+  'Publications': `<div class="resume-section" data-section-name="Publications"><p><br></p><p><b>PUBLICATIONS</b></p><p>• [Title of Publication], <i>[Journal or Conference Name]</i>, [Year]</p></div>`,
+  'Professional Affiliations': `<div class="resume-section" data-section-name="Professional Affiliations"><p><br></p><p><b>PROFESSIONAL AFFILIATIONS</b></p><p>• [Member/Role], [Organization Name]</p></div>`,
+  'Interests': `<div class="resume-section" data-section-name="Interests"><p><br></p><p><b>INTERESTS</b></p><p>[Interest 1], [Interest 2], [Interest 3]</p></div>`,
+  'Awards & Honors': `<div class="resume-section" data-section-name="Awards & Honors"><p><br></p><p><b>AWARDS & HONORS</b></p><p>• [Award Name] - [Awarding Body] ([Year])</p></div>`,
+  'References': `<div class="resume-section" data-section-name="References"><p><br></p><p><b>REFERENCES</b></p><p>Available upon request.</p></div>`,
+  'Custom Section': `<div class="resume-section" data-section-name="Custom Section"><p><br></p><p><b>[CUSTOM SECTION TITLE]</b></p><p>[Your content here]</p></div>`,
+};
+
+export const AVAILABLE_SECTIONS = [
+  'Heading',
+  'Profile',
+  'Core Skills',
+  'Experience',
+  'Education',
+  'Projects',
+  'Certifications',
+  'Languages',
+  'Volunteering',
+  'Publications',
+  'Professional Affiliations',
+  'Interests',
+  'Awards & Honors',
+  'References',
+  'Custom Section'
+];
